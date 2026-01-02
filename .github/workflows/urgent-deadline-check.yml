@@ -1,0 +1,103 @@
+name: Daily Urgent Deadline Check
+
+on:
+  schedule:
+    # Run daily at 9 AM UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch: # Allow manual trigger for testing
+
+jobs:
+  urgent-deadline-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check for urgent deadlines
+      id: check-urgent
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const issues = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            per_page: 100
+          });
+          
+          const today = new Date();
+          let urgentNotifications = [];
+          
+          for (const issue of issues.data) {
+            if (!issue.assignee) continue;
+            
+            let deadline = null;
+            let daysUntilDeadline = null;
+            
+            // Try to extract deadline from milestone
+            if (issue.milestone && issue.milestone.due_on) {
+              deadline = new Date(issue.milestone.due_on);
+              daysUntilDeadline = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+            }
+            
+            // Check if deadline is within 3 days
+            if (daysUntilDeadline !== null && daysUntilDeadline < 3 && daysUntilDeadline >= 0) {
+              urgentNotifications.push({
+                number: issue.number,
+                title: issue.title,
+                assignee: issue.assignee.login,
+                email: issue.assignee.email || `${issue.assignee.login}@users.noreply.github.com`,
+                url: issue.html_url,
+                daysUntilDeadline: daysUntilDeadline
+              });
+            }
+          }
+          
+          core.setOutput('urgent_count', urgentNotifications.length);
+          core.setOutput('urgent_notifications', JSON.stringify(urgentNotifications));
+          return urgentNotifications;
+          
+    - name: Send urgent notifications
+      if: steps.check-urgent.outputs.urgent_count > 0
+      uses: actions/github-script@v7
+      env:
+        URGENT_NOTIFICATIONS: ${{ steps.check-urgent.outputs.urgent_notifications }}
+      with:
+        script: |
+          const notifications = JSON.parse(process.env.URGENT_NOTIFICATIONS);
+          
+          console.log('🚨 === URGENT DEADLINE NOTIFICATIONS ===');
+          console.log(`Total urgent issues: ${notifications.length}`);
+          console.log('');
+          
+          // Group by assignee
+          const groupedByAssignee = {};
+          for (const notif of notifications) {
+            if (!groupedByAssignee[notif.assignee]) {
+              groupedByAssignee[notif.assignee] = [];
+            }
+            groupedByAssignee[notif.assignee].push(notif);
+          }
+          
+          for (const [assignee, issues] of Object.entries(groupedByAssignee)) {
+            console.log(`📧 URGENT notification for: ${assignee}`);
+            console.log(`   Urgent issues: ${issues.length}`);
+            
+            for (const issue of issues) {
+              console.log(`   🚨 Issue #${issue.number}: ${issue.title}`);
+              console.log(`      ⏰ Deadline in ${issue.daysUntilDeadline} day(s)!`);
+              console.log(`      🔗 ${issue.url}`);
+            }
+            console.log('');
+          }
+          
+    - name: No urgent deadlines
+      if: steps.check-urgent.outputs.urgent_count == 0
+      run: |
+        echo "✅ No issues with deadlines < 3 days found"
+        
+    - name: Summary
+      run: |
+        echo "Daily urgent deadline check completed"
+        echo "This workflow runs daily to check for issues with deadlines < 3 days"

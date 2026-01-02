@@ -1,0 +1,116 @@
+name: Email Notifications
+
+on:
+  schedule:
+    # Run at 9 AM UTC on Monday and Friday
+    - cron: '0 9 * * 1,5'
+  workflow_dispatch: # Allow manual trigger for testing
+
+jobs:
+  check-and-notify:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Get open issues with assignees
+      id: get-issues
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const issues = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            per_page: 100
+          });
+          
+          const today = new Date();
+          const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, 5 = Friday
+          const isMonOrFri = dayOfWeek === 1 || dayOfWeek === 5;
+          
+          let notificationData = [];
+          
+          for (const issue of issues.data) {
+            if (!issue.assignee) continue;
+            
+            // Check if issue has a due date in the body or milestone
+            let deadline = null;
+            let daysUntilDeadline = null;
+            
+            // Try to extract deadline from milestone
+            if (issue.milestone && issue.milestone.due_on) {
+              deadline = new Date(issue.milestone.due_on);
+              daysUntilDeadline = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+            }
+            
+            // Determine if we should send notification
+            const shouldNotify = isMonOrFri || (daysUntilDeadline !== null && daysUntilDeadline < 3 && daysUntilDeadline >= 0);
+            
+            if (shouldNotify) {
+              notificationData.push({
+                number: issue.number,
+                title: issue.title,
+                assignee: issue.assignee.login,
+                email: issue.assignee.email || `${issue.assignee.login}@users.noreply.github.com`,
+                url: issue.html_url,
+                daysUntilDeadline: daysUntilDeadline,
+                urgent: daysUntilDeadline !== null && daysUntilDeadline < 3
+              });
+            }
+          }
+          
+          core.setOutput('notifications', JSON.stringify(notificationData));
+          core.setOutput('count', notificationData.length);
+          return notificationData;
+          
+    - name: Send email notifications
+      if: steps.get-issues.outputs.count > 0
+      uses: actions/github-script@v7
+      env:
+        NOTIFICATIONS: ${{ steps.get-issues.outputs.notifications }}
+      with:
+        script: |
+          const notifications = JSON.parse(process.env.NOTIFICATIONS);
+          
+          // Group notifications by assignee
+          const groupedByAssignee = {};
+          for (const notif of notifications) {
+            if (!groupedByAssignee[notif.assignee]) {
+              groupedByAssignee[notif.assignee] = [];
+            }
+            groupedByAssignee[notif.assignee].push(notif);
+          }
+          
+          console.log('=== Email Notifications Summary ===');
+          console.log(`Total assignees to notify: ${Object.keys(groupedByAssignee).length}`);
+          console.log('');
+          
+          for (const [assignee, issues] of Object.entries(groupedByAssignee)) {
+            console.log(`📧 Notification for: ${assignee}`);
+            console.log(`   Issues assigned: ${issues.length}`);
+            
+            for (const issue of issues) {
+              const urgentFlag = issue.urgent ? '🚨 URGENT' : '';
+              const deadlineInfo = issue.daysUntilDeadline !== null 
+                ? ` (${issue.daysUntilDeadline} days until deadline)` 
+                : '';
+              console.log(`   - Issue #${issue.number}: ${issue.title} ${urgentFlag}${deadlineInfo}`);
+              console.log(`     URL: ${issue.url}`);
+            }
+            console.log('');
+          }
+          
+          console.log('Note: To actually send emails, configure email service with SMTP credentials');
+          console.log('You can use actions like dawidd6/action-send-mail with repository secrets:');
+          console.log('  - MAIL_SERVER, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM');
+          
+    - name: Summary
+      run: |
+        echo "✅ Email notification check completed"
+        echo "Checked open issues and identified assignees to notify"
+        echo "To enable actual email sending:"
+        echo "  1. Add email service credentials as repository secrets"
+        echo "  2. Use an email action like 'dawidd6/action-send-mail'"
+        echo "  3. Configure SMTP settings in the workflow"
