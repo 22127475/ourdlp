@@ -1,5 +1,5 @@
-name: "Pull Request ${{ github.event.pull_request.title }}"
-
+name: "Pull Request 
+run-name: ${{ github.event.pull_request.title }}"
 on:
   pull_request:
     branhches: [main, develop]

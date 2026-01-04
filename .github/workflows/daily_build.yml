@@ -1,9 +1,8 @@
 name: Daily build 
 
 on:
-  on:
   schedule:
-    - cron: '0 12 * * FRI'
+  - cron: '0 12 * * FRI'
   workflow_dispatch: 
 
 env: 
