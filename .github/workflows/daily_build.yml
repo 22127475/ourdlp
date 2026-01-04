@@ -1,37 +1,43 @@
-name: Daily build 
+name: Daily build
 
 on:
   schedule:
-  - cron: '0 12 * * FRI'
-  workflow_dispatch: 
+    - cron: "0 12 * * FRI"
+  workflow_dispatch:
 
-env: 
-  AGENT_SRC_PATH: SRC/agent
-  SW_OUT_PATH: ./SW_OUT
+env:
+  AGENT_SRC_PATH: "SRC/agent"
+  SW_OUT_PATH: "SW_OUT"
 jobs:
   build-agent:
     runs-on: windows-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
+      - uses: actions/checkout@v4
 
-    - name: Restore dependencies
-      run: dotnet restore "${env.AGENT_SRC_PATH}/agent.slnx"
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-    - name: Build Agent
-      run: dotnet publish "${env.AGENT_SRC_PATH}/agent.csproj" -c Release -r win-x64 --self-contained true -p:PublishAot=true -o "${env.SW_OUT_PATH}"
-    
-    - name: Set Artifact name
-      run: echo "TODAY=$(date +'%Y%m%d)" >> $GITHUB_ENV
+      - name: Restore dependencies
+        run: dotnet restore "$env:AGENT_SRC_PATH/agent.slnx"
 
-    - name: archive Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: OURDLP_PULL_REQUEST_$TODAY
-        path: "${env.SW_OUT_PATH}/*"
-        retention-days: 90
+      - name: Build Agent
+        run: |
+          dotnet publish "$env:AGENT_SRC_PATH/agent.csproj" `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishAot=true `
+            -o "$env:SW_OUT_PATH"
+
+      - name: Set Artifact name
+        run: echo "TODAY=$(Get-Date -Format 'yyyyMMdd')" >> $env:GITHUB_ENV
+
+      - name: Archive Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OURDLP_DAILY_BUILD_${{ env.TODAY }}
+          path: ${{ env.SW_OUT_PATH }}
+          retention-days: 90
