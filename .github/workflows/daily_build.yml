@@ -28,7 +28,7 @@ jobs:
       run: dotnet publish ${env.AGENT_SRC_PATH}/agent.csproj -c Release -r win-x64 --self-contained true -p:PublishAot=true -o ${env.SW_OUT_PATH}
     
     - name: Set Artifact name
-        run: echo "TODAY=$(date +'%Y%m%d)" >> $GITHUB_ENV
+      run: echo "TODAY=$(date +'%Y%m%d)" >> $GITHUB_ENV
 
     - name: archive  Agent Artifact
       uses: actions/upload-artifact@v4
