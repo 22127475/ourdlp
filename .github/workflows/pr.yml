@@ -1,13 +1,13 @@
-name: "Pull Request 
-run-name: ${{ github.event.pull_request.title }}"
+name: Pull Request 
+run-name: "${{ github.event.pull_request.title }}"
 on:
   pull_request:
     branhches: [main, develop]
   workflow_dispatch: 
 
 env: 
-  AGENT_SRC_PATH: SRC/agent
-  SW_OUT_PATH: ./SW_OUT
+  AGENT_SRC_PATH: "SRC/agent"
+  SW_OUT_PATH: "./SW_OUT"
 jobs:
   build-agent:
     runs-on: windows-latest
@@ -21,17 +21,17 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Restore dependencies
-      run: dotnet restore ${env.AGENT_SRC_PATH}/agent.slnx
+      run: dotnet restore "${env.AGENT_SRC_PATH}/agent.slnx"
 
     - name: Build Agent
-      run: dotnet publish ${env.AGENT_SRC_PATH}/agent.csproj -c Release -r win-x64 --self-contained true -p:PublishAot=true -o ${env.SW_OUT_PATH}
+      run: dotnet publish "${env.AGENT_SRC_PATH}/agent.csproj" -c Release -r win-x64 --self-contained true -p:PublishAot=true -o "${env.SW_OUT_PATH}"
     
     - name: Set Artifact name
       run: echo "TODAY=$(date +'%Y%m%d)" >> $GITHUB_ENV
 
-    - name: archive  Agent Artifact
+    - name: archive Artifact
       uses: actions/upload-artifact@v4
       with:
         name: OURDLP_PULL_REQUEST_$TODAY
-        path: ./SW_OUT/*
+        path: "${env.SW_OUT_PATH}/*"
         retention-days: 90

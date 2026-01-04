@@ -21,17 +21,17 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Restore dependencies
-      run: dotnet restore ${env.AGENT_SRC_PATH}/agent.slnx
+      run: dotnet restore "${env.AGENT_SRC_PATH}/agent.slnx"
 
     - name: Build Agent
-      run: dotnet publish ${env.AGENT_SRC_PATH}/agent.csproj -c Release -r win-x64 --self-contained true -p:PublishAot=true -o ${env.SW_OUT_PATH}
+      run: dotnet publish "${env.AGENT_SRC_PATH}/agent.csproj" -c Release -r win-x64 --self-contained true -p:PublishAot=true -o "${env.SW_OUT_PATH}"
     
     - name: Set Artifact name
       run: echo "TODAY=$(date +'%Y%m%d)" >> $GITHUB_ENV
 
-    - name: archive  Agent Artifact
+    - name: archive Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: OURDLP_DAILY_BUILD_$TODAY
-        path: ./SW_OUT/*
+        name: OURDLP_PULL_REQUEST_$TODAY
+        path: "${env.SW_OUT_PATH}/*"
         retention-days: 90
