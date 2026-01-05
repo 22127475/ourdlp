@@ -8,15 +8,15 @@ on:
         options:
           - "YES"
           - "NO"
-        description: "Choose YES for test, NO for release "
+        description: "TEST_RELEASE (Choose YES for test, NO for release) "
         required: true
         default: "YES"
       TAG:
-        description: "Tag for release"
+        description: "TAG (Input Tag for release)"
         required: true
         default: "v1.0.0"
       BRANCH:
-        description: "Choose branch to build"
+        description: "BRANCH (Input branch to build)"
         required: true
         default: "main"
 
@@ -66,7 +66,7 @@ jobs:
 
       - name: Zip Artifact
         if: ${{ github.event.inputs.TEST_RELEASE == 'NO' }}
-        run: Compress-Archive -Path "${{ env.SW_OUT_PATH }}/*" -DestinationPath "$./OURDLP_RELEASE_${{ github.event.inputs.TAG }}_${{ env.TODAY }}.zip"
+        run: Compress-Archive -Path "${{ env.SW_OUT_PATH }}/*" -DestinationPath "./OURDLP_RELEASE_${{ github.event.inputs.TAG }}_${{ env.TODAY }}.zip"
 
       - name: GitHub Release
         if: ${{ github.event.inputs.TEST_RELEASE == 'NO' }}
