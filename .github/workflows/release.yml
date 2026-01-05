@@ -6,11 +6,11 @@ on:
       TEST_RELEASE:
         type: choice
         options:
-          - YES
-          - NO
-        description: "Choose yes for testing"
+          - "YES"
+          - "NO"
+        description: "Choose YES for test, NO for release "
         required: true
-        default: YES
+        default: "YES"
       TAG:
         description: "Tag for release"
         required: true
@@ -57,7 +57,7 @@ jobs:
         run: echo "TODAY=$(Get-Date -Format 'yyMMdd')" >> $env:GITHUB_ENV
 
       - name: Archive Artifact
-        if: ${{ github.event.inputs.TEST_RELEASE == 'YES'}}
+        if: ${{ github.event.inputs.TEST_RELEASE == 'YES' }}
         uses: actions/upload-artifact@v4
         with:
           name: OURDLP_TEST_RELEASE_${{ env.TODAY }}
@@ -65,14 +65,15 @@ jobs:
           retention-days: 7
 
       - name: Zip Artifact
-        if: ${{ github.event.inputs.TEST_RELEASE == 'NO'}}
+        if: ${{ github.event.inputs.TEST_RELEASE == 'NO' }}
         run: Compress-Archive -Path "${{ env.SW_OUT_PATH }}/*" -DestinationPath "$./OURDLP_RELEASE_${{ github.event.inputs.TAG }}_${{ env.TODAY }}.zip"
 
       - name: GitHub Release
-        if: ${{ github.event.inputs.TEST_RELEASE == 'YES'}}
+        if: ${{ github.event.inputs.TEST_RELEASE == 'YES' }}
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ github.event.inputs.TAG }}
+          body: "Build from branch ${{ github.event.inputs.BRANCH }}"
           files: "./OURDLP_RELEASE_${{ github.event.inputs.TAG }}_${{ env.TODAY }}.zip"
           tag_name: ${{ github.event.inputs.TAG }}
         env:
