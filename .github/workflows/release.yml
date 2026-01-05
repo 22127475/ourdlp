@@ -69,7 +69,7 @@ jobs:
         run: Compress-Archive -Path "${{ env.SW_OUT_PATH }}/*" -DestinationPath "$./OURDLP_RELEASE_${{ github.event.inputs.TAG }}_${{ env.TODAY }}.zip"
 
       - name: GitHub Release
-        if: ${{ github.event.inputs.TEST_RELEASE == 'YES' }}
+        if: ${{ github.event.inputs.TEST_RELEASE == 'NO' }}
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ github.event.inputs.TAG }}
