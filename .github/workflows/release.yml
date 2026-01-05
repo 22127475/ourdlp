@@ -57,7 +57,7 @@ jobs:
         run: echo "TODAY=$(Get-Date -Format 'yyMMdd')" >> $env:GITHUB_ENV
 
       - name: Archive Artifact
-        if: ${{ github.event.inputs.TEMP_RELEASE.options == 'YES'}}
+        if: ${{ github.event.inputs.TEST_RELEASE.options == 'YES'}}
         uses: actions/upload-artifact@v4
         with:
           name: OURDLP_TEST_RELEASE_${{ env.TODAY }}
@@ -65,13 +65,15 @@ jobs:
           retention-days: 7
 
       - name: Zip Artifact
-        if: ${{ github.event.inputs.TEMP_RELEASE.options == 'NO'}}
-        run: Compress-Archive -Path "${{ env.SW_OUT_PATH }}/*" -DestinationPath "${{ env.SW_OUT_PATH }}/OURDLP_REALEASE_${{ github.event.inputs.TAG }}_${{ env.TODAY }}.zip"
+        if: ${{ github.event.inputs.TEST_RELEASE.options == 'NO'}}
+        run: Compress-Archive -Path "${{ env.SW_OUT_PATH }}/*" -DestinationPath "$./OURDLP_RELEASE_${{ github.event.inputs.TAG }}_${{ env.TODAY }}.zip"
 
       - name: GitHub Release
-        if: ${{ github.event.inputs.TEMP_RELEASE.options == 'YES'}}
+        if: ${{ github.event.inputs.TEST_RELEASE.options == 'YES'}}
         uses: softprops/action-gh-release@v2
         with:
-          files: "${{ env.SW_OUT_PATH }}/OURDLP_REALEASE_${{ github.event.inputs.TAG }}_${{ env.TODAY }}.zip"
+          name: ${{ github.event.inputs.TAG }}
+          files: "./OURDLP_RELEASE_${{ github.event.inputs.TAG }}_${{ env.TODAY }}.zip"
+          tag_name: ${{ github.event.inputs.TAG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
