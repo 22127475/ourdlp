@@ -33,7 +33,7 @@ jobs:
             -o "$env:SW_OUT_PATH"
 
       - name: Set Artifact name
-        run: echo "TODAY=$(Get-Date -Format 'yyyyMMdd')" >> $env:GITHUB_ENV
+        run: echo "TODAY=$(Get-Date -Format 'yyMMdd')" >> $env:GITHUB_ENV
 
       - name: Archive Artifact
         uses: actions/upload-artifact@v4
