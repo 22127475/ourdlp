@@ -1,6 +1,8 @@
 name: Pull Request
 run-name: "PR: ${{ github.event.pull_request.title || 'Manual Trigger' }}"
 
+permissions:
+  contents: read
 on:
   pull_request:
     branches: [main, develop]
@@ -9,6 +11,7 @@ on:
 env:
   AGENT_SRC_PATH: "SRC/agent"
   SW_OUT_PATH: "SW_OUT"
+  PR_BRANCH: ${{ github.event.pull_request.title }}
 
 jobs:
   build-agent:
