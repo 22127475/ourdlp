@@ -24,7 +24,7 @@ env:
   AGENT_SRC_PATH: "SRC/agent"
   SW_OUT_PATH: "SW_OUT"
   RELEASE_TAG: "${{ github.event.inputs.TAG }}"
-  RELEASE_BRANCH: ${{ github.event.inputs.TAG }}
+  RELEASE_BRANCH: ${{ github.event.inputs.BRANCH }}
 
 permissions:
   contents: write
