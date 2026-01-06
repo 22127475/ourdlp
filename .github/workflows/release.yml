@@ -3,6 +3,10 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
+      BRANCH:
+        description: "BRANCH (Input branch to build)"
+        required: true
+        default: "main"
       TEST_RELEASE:
         type: choice
         options:
@@ -15,14 +19,12 @@ on:
         description: "TAG (Input Tag for release)"
         required: true
         default: "v1.0.0"
-      BRANCH:
-        description: "BRANCH (Input branch to build)"
-        required: true
-        default: "main"
 
 env:
   AGENT_SRC_PATH: "SRC/agent"
   SW_OUT_PATH: "SW_OUT"
+  RELEASE_TAG: "${{ github.event.inputs.TAG }}"
+  RELEASE_BRANCH: ${{ github.event.inputs.TAG }}
 
 permissions:
   contents: write
@@ -34,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.BRANCH }}
+          ref: "$env:RELEASE_BRANCH"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -66,15 +68,15 @@ jobs:
 
       - name: Zip Artifact
         if: ${{ github.event.inputs.TEST_RELEASE == 'NO' }}
-        run: Compress-Archive -Path "${{ env.SW_OUT_PATH }}/*" -DestinationPath "./OURDLP_RELEASE_${{ github.event.inputs.TAG }}_${{ env.TODAY }}.zip"
+        run: Compress-Archive -Path "${{ env.SW_OUT_PATH }}/*" -DestinationPath "./OURDLP_RELEASE_${{ env.RELEASE_TAG }}_${{ env.TODAY }}.zip"
 
       - name: GitHub Release
         if: ${{ github.event.inputs.TEST_RELEASE == 'NO' }}
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ github.event.inputs.TAG }}
+          name: ${{ env.RELEASE_TAG }}
           body: "Build from branch ${{ github.event.inputs.BRANCH }}"
-          files: "./OURDLP_RELEASE_${{ github.event.inputs.TAG }}_${{ env.TODAY }}.zip"
+          files: "./OURDLP_RELEASE_${{ env.RELEASE_TAG }}_${{ env.TODAY }}.zip"
           tag_name: ${{ github.event.inputs.TAG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
