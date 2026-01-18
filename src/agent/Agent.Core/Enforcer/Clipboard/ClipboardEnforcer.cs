@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using ClipboardH = Windows.ApplicationModel.DataTransfer.Clipboard;
 
-namespace Agent.Core.Enforcer
+namespace Agent.Core.Enforcer.ClipboardE
 {
     public class ClipboardEnforcer : NativeWindow, IEnforcer
     {
