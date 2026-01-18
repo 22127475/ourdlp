@@ -21,7 +21,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore dependencies
-        run: dotnet restore "/OurDLP.slnx"
+        run: dotnet restore "./OurDLP.slnx"
 
       - name: Build Agent
         run: ./scripts/build.bat "${{ env.AGENT_SRC_PATH }}/Agent.Core/Agent.Core.csproj" "${{ env.SW_OUT_PATH }}"
