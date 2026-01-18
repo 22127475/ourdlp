@@ -1,8 +1,9 @@
-﻿using Agent.Core.Enforcer;
+﻿using Agent.Core.Enforcer.ClipboardE;
+using Agent.Core.Enforcer;
 
 namespace Agent.Core
 {
-    internal class Program
+    public class Program
     {
         static async Task Main(string[] args)
         {
@@ -12,7 +13,7 @@ namespace Agent.Core
 
             List<Enforcer.IEnforcer> enforcers = new List<Enforcer.IEnforcer>
             {
-                new Enforcer.ClipboardEnforcer(),
+                new ClipboardEnforcer(),
                 
             };
 
