@@ -7,7 +7,7 @@ on:
 
 env:
   AGENT_SRC_PATH: "SRC/Agent"
-  SW_OUT_PATH: "SW_OUT"
+  SW_OUT_PATH: "Artifact"
 jobs:
   build-agent:
     runs-on: windows-latest
@@ -24,7 +24,7 @@ jobs:
         run: dotnet restore "/OurDLP.slnx"
 
       - name: Build Agent
-        run: ./scripts/build.bat
+        run: ./scripts/build.bat "${{ env.AGENT_SRC_PATH }}/Agent.Core/Agent.Core.csproj" "${{ env.SW_OUT_PATH }}"
 
       - name: Set Artifact name
         run: echo "TODAY=$(Get-Date -Format 'yyMMdd')" >> $env:GITHUB_ENV
