@@ -1,0 +1,1 @@
+dotnet publish "../src/Agent/OurDLP.Core/OurDLP.Core.csproj" -c Release 

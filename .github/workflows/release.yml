@@ -21,7 +21,7 @@ on:
         default: "v1.0.0"
 
 env:
-  AGENT_SRC_PATH: "SRC/agent"
+  AGENT_SRC_PATH: "SRC/Agent"
   SW_OUT_PATH: "SW_OUT"
   RELEASE_TAG: "${{ github.event.inputs.TAG }}"
   RELEASE_BRANCH: ${{ github.event.inputs.BRANCH }}
@@ -41,19 +41,13 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
 
       - name: Restore dependencies
-        run: dotnet restore "$env:AGENT_SRC_PATH/agent.slnx"
+        run: dotnet restore "/OurDLP.slnx"
 
       - name: Build Agent
-        run: |
-          dotnet publish "$env:AGENT_SRC_PATH/agent.csproj" `
-            -c Release `
-            -r win-x64 `
-            --self-contained true `
-            -p:PublishAot=true `
-            -o "$env:SW_OUT_PATH"
+        run: ./scripts/build.bat
 
       - name: Set Artifact name
         run: echo "TODAY=$(Get-Date -Format 'yyMMdd')" >> $env:GITHUB_ENV
